@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import "./registration.css";
 
@@ -12,10 +12,7 @@ function Registration() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("")
-  const [isEmpty, setIsEmpty] = useState(false);
-
-  
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     role: "patient",
     details: {},
@@ -23,30 +20,69 @@ function Registration() {
 
   const navigate = useNavigate();
   const api = "http://localhost:8000/api/registration";
-  const id = useParams()
+  const { id } = useParams();
+
+  useEffect(() => {
+    if (id) {
+      axios.get(`${api}/${id}`)
+        .then((res) => {
+          const data = res.data;
+          setFirstName(data.firstName || "");
+          setLastName(data.lastName || "");
+          setAge(data.age ? String(data.age) : "");
+          setGender(data.gender || "");
+          setContactNumber(data.contactNumber || "");
+          setEmail(data.email || "");
+          setPassword("");
+          setConfirmPassword("");
+          setFormData({
+            role: data.role || "patient",
+            details: data.details || {},
+          });
+        })
+        .catch((err) => {
+          console.error("Error fetching user:", err);
+        });
+    }
+  }, [id]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-   setError("");
-  
-    setIsEmpty(true);
-  
+    setError("");
+
+    if (!firstName || !lastName || !email || !contactNumber || !age || !gender || !password || !confirmPassword) {
+      setError("All fields are required.");
+      return;
+    }
+
+    if (!/^\d{10}$/.test(contactNumber)) {
+      setError("Phone number must be 10 digits.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
-    if (id.id) {
-      putData();
+
+    if (id) {
+      await putData();
     } else {
-      postData();
+      await postData();
     }
   };
-  
-    const postData = async (e) => { 
+
+  const postData = async () => {
     try {
       const response = await axios.post(api, {
         firstName,
         lastName,
-        age,
+        age: parseInt(age),
         gender,
         contactNumber,
         email,
@@ -54,31 +90,31 @@ function Registration() {
         role: formData.role,
         details: formData.details,
       });
-
-      console.log("Registration successful:", response.data);
       navigate("/login");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed.");
     }
   };
- const putData = async(e)=>{
-  e.preventDefault();
+
+  const putData = async () => {
     try {
       const response = await axios.put(`${api}/${id}`, {
-        firstName,lastName,age, gender,contactNumber,
+        firstName,
+        lastName,
+        age: parseInt(age),
+        gender,
+        contactNumber,
         email,
         password,
         role: formData.role,
-        details: formData.details, 
+        details: formData.details,
       });
-
-      console.log( response.data);
       navigate("/login");
     } catch (error) {
-      console.log("Error updating:", error);
+      setError("Failed to update user.");
     }
   };
- 
+
   const handleChange = (e) => {
     setFormData({ ...formData, role: e.target.value });
   };
@@ -88,15 +124,15 @@ function Registration() {
       ...formData,
       details: { ...formData.details, [e.target.name]: e.target.value },
     });
-  }
+  };
 
   return (
     <div className="registration">
       <div className="left">
-        <h2 className="h2">Registration Form</h2>
-   
+        <h2 className="h2">{id ? "Update User" : "Registration Form"}</h2>
+
         <form onSubmit={handleSubmit} className="mt-4 form registration container mt-2 justify-center">
-         {error && <p className="text-danger text-center">{error}</p>}
+          {error && <p className="text-danger text-center">{error}</p>}
 
           <div className="mb-3">
             <input
@@ -107,7 +143,6 @@ function Registration() {
               onChange={(e) => setFirstName(e.target.value)}
               required
             />
-            {/* {isEmpty && !firstName &&(<span style={{color: "red", textAlign: "center" }}>Should not be empty</span>)} */}
           </div>
 
           <div className="mb-3">
@@ -161,15 +196,13 @@ function Registration() {
               <option value="female">Female</option>
               <option value="other">Other</option>
             </select>
-            {isEmpty && !gender && ( <span style={{ color: "red", textAlign: "center" }}>select gender</span>
-            )}
           </div>
 
           <div className="mb-3">
             <input
               type="password"
               className="form-control"
-              placeholder="Password"
+              placeholder="Password (min 6 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -187,30 +220,26 @@ function Registration() {
             />
           </div>
 
-          {/* Role Selection */}
           <div className="mb-3">
             <label>Select Role:</label>
             <select name="role" value={formData.role} onChange={handleChange} className="form-control">
               <option value="patient">Patient</option>
               <option value="doctor">Doctor</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
 
-          {/* Dynamic Form Fields Based on Role */}
           {formData.role === "patient" && (
-            <>
-              <div className="mb-3">
-                <label>Diagnosis:</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="diagnosis"
-                  placeholder="Enter Diagnosis"
-                  onChange={handleDetailsChange}
-                />
-              </div>
-            </>
+            <div className="mb-3">
+              <label>Diagnosis:</label>
+              <input
+                type="text"
+                className="form-control"
+                name="diagnosis"
+                placeholder="Enter Diagnosis"
+                onChange={handleDetailsChange}
+                value={formData.details.diagnosis || ""}
+              />
+            </div>
           )}
 
           {formData.role === "doctor" && (
@@ -223,6 +252,7 @@ function Registration() {
                   name="specialization"
                   placeholder="Enter Specialization"
                   onChange={handleDetailsChange}
+                  value={formData.details.specialization || ""}
                 />
               </div>
               <div className="mb-3">
@@ -233,28 +263,14 @@ function Registration() {
                   name="experience"
                   placeholder="Enter Experience"
                   onChange={handleDetailsChange}
-                />
-              </div>
-            </>
-          )}
-
-          {formData.role === "admin" && (
-            <>
-              <div className="mb-3">
-                <label>Unique Identity:</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="uniqueIdentity"
-                  placeholder="Enter Unique Identity"
-                  onChange={handleDetailsChange}
+                  value={formData.details.experience || ""}
                 />
               </div>
             </>
           )}
 
           <button type="submit" className="btn btn-primary w-100">
-            Register
+            {id ? "Update" : "Register"}
           </button>
 
           <p className="mt-3 text-center">
@@ -264,6 +280,6 @@ function Registration() {
       </div>
     </div>
   );
+}
 
-  }
 export default Registration;

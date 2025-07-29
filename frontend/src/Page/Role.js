@@ -7,7 +7,7 @@ function Role() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isEmpty, setIsEmpty] = useState(false);
-  const urlapi = "http://localhost:8000/api/role";
+  const urlapi = "http://localhost:8000/api/doctor";
   const { id } = useParams();
 
   useEffect(() => {

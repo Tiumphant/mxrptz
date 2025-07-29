@@ -9,7 +9,7 @@ const handleError = (res, error) => {
 };
 
 
-route.get("/doctor", async (req, res) => {
+route.get("/role", async (req, res) => {
   try {
     let roles = await Doctor.find();
     res.status(200).json(roles);
@@ -19,7 +19,7 @@ route.get("/doctor", async (req, res) => {
 });
 
 
-route.post("/doctor", async (req, res) => {
+route.post("/role", async (req, res) => {
   try {
     const roleData = req.body;
     const result = await Doctor.create(roleData);
@@ -29,7 +29,7 @@ route.post("/doctor", async (req, res) => {
   }
 });
 
-route.get("/doctor/:id", async (req, res) => {
+route.get("/role/:id", async (req, res) => {
   try {
     let id = req.params.id;
     
@@ -49,7 +49,7 @@ route.get("/doctor/:id", async (req, res) => {
 });
 
 
-route.get("/doctor/search/:key", async (req, res) => {
+route.get("/role/search/:key", async (req, res) => {
   try {
     let key = req.params.key;
     let insensitive = new RegExp(key, "i");

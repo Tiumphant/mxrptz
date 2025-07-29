@@ -1,32 +1,45 @@
 const express = require("express");
-const Appointment = require("../model/Appointmentmodel");
+const Appointment = require("../model/AppointmentModel.js");
 const route = express.Router();
 route.use(express.json())
+const handleError = (res, err) => {
+    console.log(err);
+    res.status(500).json({ message: "Error", error: err.message });
+};
 
 route.get("/appointment", async (req, res) => {
     try {
-        let result = await Appointment.find();
+        let result = await Appointment.find()
+            .populate("patient_id", "name")
+            .populate("doctor_id", "name")
+            
         res.status(200).json(result);
     } catch (err) {
-       res.status(500).json({message: "internal server Error", err})
+        handleError(res, err);
     }
 });
 
 route.get('/appointment/:id', async (req, res) => {
+    console.log( req.params.id);
     try {
-        const appointment = await Appointment.findById(req.params.id);
-        res.json(appointment);
+        const appointments = await Appointment.findById(req.params.id).populate('patient_id', 'name') 
+        .populate('doctor_id', 'name') 
+        
+        console.log("appointment data:", appointments);
+        res.json(appointments);
     } catch (error) {
-        res.status(500).json({ message: "Error fetching appointment", error });
+        console.error("Error fetching department:", error);
+        res.status(500).json({ message: "Error fetching department", error });
     }
 });
 
 route.post("/appointment", async (req, res) => {
     try {
         let result = await new Appointment(req.body).save();
+        result = await result.populate('patient_id', 'name')
         res.status(201).json({ message: "Post appointment successfully", data: result });
     } catch (err) {
-        res.status(500).json({ message: "Error posting appointment", error: err.message });
+        handleError(res, err);
     }
 });
 
@@ -36,20 +49,22 @@ route.put("/appointment/:id", async (req, res) => {
         let result = await Appointment.updateOne({ _id: id }, { $set: req.body });
         res.status(200).json({ message: "Appointment updated successfully", data: result });
     } catch (err) {
-        res.status(500).json({message: "internal server Error", err})
+        handleError(res, err);
     }
 });
+
 
 route.delete("/appointment/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        let result = await Appointment.deleteOne({_id:id});
-        if (result.deletedCount === 0) {
+        let result = await Appointment.deleteOne({_id:id})
+        if (!result) {
             return res.status(404).json({ message: "Appointment not found" });
         }
+
         res.status(200).json({ message: "Appointment deleted successfully" });
     } catch (err) {
-       res.status(500).json({message: "Error in deleting appointment data", err})
+        handleError(res, err);
     }
 });
 

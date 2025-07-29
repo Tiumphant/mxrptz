@@ -10,7 +10,7 @@ function RoleD() {
   
   const update = async () => {
     try {
-      let api = await axios.get("http://localhost:8000/api/role");
+      let api = await axios.get("http://localhost:8000/api/doctor");
       let result = api.data; 
       console.log("Fetched API successfully:", result);
       

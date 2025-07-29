@@ -1,11 +1,13 @@
 const mongoose = require("mongoose")
 const UserSchema = new mongoose.Schema(
     {
-        name: {type: String},
+        firstName: {type: String},
+        lastName: {type: String},
         age: {type: Number},
+        gender: {type:String},
         role: { type: String, enum: ['patient', 'doctor'] }, 
         details: { type: mongoose.Schema.Types.Mixed },
-        contactNumber: { type: String },
+        contactNumber: { type: String, required: true },
         email: { type: String, required: true },
         password: {type: String}
     });

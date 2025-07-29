@@ -26,8 +26,6 @@ function Login() {
                 navigate("/patientdashboard");
             } else if (response.data.role === "doctor") {
                 navigate("/doctordashboard");
-            } else if (response.data.role === "admin"){
-                navigate("/dashboard");
             } else{
                   //console.log("please select role")
                   setError("This role is not registered")
@@ -73,7 +71,6 @@ function Login() {
                         >
                             <option value="patient">Patient</option>
                             <option value="doctor">Doctor</option>
-                            <option value="admin">Admin</option>
                         </select>
                     </div>
                     <button 
